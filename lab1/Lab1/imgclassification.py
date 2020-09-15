@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ##############
-#### Your name:
+#### Your name: Bojun Yang
 ##############
 
 import numpy as np
@@ -10,6 +10,7 @@ from sklearn import svm, metrics
 from skimage import io, feature, filters, exposure, color, measure
 import ransac_score
 import matplotlib.pyplot as plt
+import joblib
 
 class ImageClassifier:
     
@@ -42,7 +43,7 @@ class ImageClassifier:
         y_max, x_max, _ = data[0].shape
         for d in data:
             greyscaled = filters.gaussian(d[:,:,0], sigma=1)
-            hog_descriptor = feature.hog(greyscaled, orientations=9, pixels_per_cell=(8,8), cells_per_block=(4,4), block_norm='L1', visualize=False)
+            hog_descriptor = feature.hog(greyscaled, orientations=10, pixels_per_cell=(64,64), cells_per_block=(2,1), block_norm='L2-Hys', visualize=False)
             feature_data.append(hog_descriptor)
             ### visualize
             # hog_descriptor, hog_image = feature.hog(greyscaled, orientations=9, pixels_per_cell=(8,8), cells_per_block=(4,4), block_norm='L1', visualize=True)
@@ -63,10 +64,11 @@ class ImageClassifier:
         
         # train model and save the trained model to self.classifier
         
-        linear_classifier = svm.LinearSVC(penalty='l2', loss='squared_hinge', dual=False, multi_class='ovr', max_iter=1000)
+        linear_classifier = svm.LinearSVC()
         linear_classifier.fit(train_data, train_labels)
-        
+
         self.classifier = linear_classifier
+        joblib.dump(self.classifier, 'classifier.pkl')
 
     def predict_labels(self, data):
         # Please do not modify the header
@@ -158,10 +160,10 @@ def main():
     print("F1 score: ", metrics.f1_score(test_labels, predicted_labels, average='micro'))
 
     # ransac
-    # print("\nRANSAC results")
-    # print("=============================")
-    # s, i = img_clf.line_fitting(wall_raw)
-    # print(f"Line Fitting Score: {ransac_score.score(s,i)}/10")
+    print("\nRANSAC results")
+    print("=============================")
+    s, i = img_clf.line_fitting(wall_raw)
+    print(f"Line Fitting Score: {ransac_score.score(s,i)}/10")
 
 if __name__ == "__main__":
     main()
